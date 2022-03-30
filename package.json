@@ -1,0 +1,20 @@
+{
+  "name": "enexdump",
+  "version": "0.1.0",
+  "description": "A utility building on notable's dumper to convert ENEX files to Markdown.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alexhuszagh/enexdump.git"
+  },
+  "author": "Alex Huszagh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Alexhuszagh/enexdump/issues"
+  },
+  "homepage": "https://github.com/Alexhuszagh/enexdump#readme",
+  "dependencies": {
+    "@notable/dumper": "^2.0.3",
+    "mkdirp": "^1.0.4",
+    "yargs": "^17.4.0"
+  }
+}
