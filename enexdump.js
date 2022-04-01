@@ -66,9 +66,14 @@ dumper.dump({
     mkdirp.sync(attachDir);
 
     // Write our attachments.
+    const invalidBuffer = Buffer.from([0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09]);
     for (const attachment of note.metadata.attachments) {
       const filename = normalizeFilename(attachment.metadata.name);
       const attachmentPath = path.join(attachDir, filename);
+      if (attachment.content.equals(invalidBuffer)) {
+        // Empty attachment, previously exported via `dump_attachments`, don't write anything.
+        continue;
+      }
       if (fs.existsSync(attachmentPath)) {
         const newHash = crypto.SHA256(attachment.content);
         const content = fs.readFileSync(attachmentPath);

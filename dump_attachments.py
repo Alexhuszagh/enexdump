@@ -61,8 +61,12 @@ def write_resource(outdir, resource, memo={}):
     data = {}
     for child in resource:
         if child.tag == 'data':
+            # Decode the contents and empty them (for our subsequent export).
+            # `dumper` doesn't properly handle empty files, so we trick
+            # it by having it use `\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09'.
             assert child.get('encoding') == 'base64'
             data['contents'] = base64.b64decode(child.text)
+            child.text = 'AAECAwQFBgcICQ==';
         elif child.tag == 'mime':
             # Need the mime type in case there is no filename.
             data['mime'] = child.text
@@ -76,12 +80,14 @@ def write_resource(outdir, resource, memo={}):
 
     # Check if the path is duplicated
     assert 'contents' in data
-    if not 'filename' in data:
+    has_filename = 'filename' in data
+    if not has_filename:
         # Use the hexdigest to get a filename, with the proper extension.
         # The hexdigest is MD5, as described here.
         resource_hash = hashlib.md5(data['contents'])
         extension = mimetypes.guess_extension(data['mime'], strict=True)
-        data['filename'] = f'{resource_hash}{extension}'
+        data['filename'] = f'{resource_hash.hexdigest()}{extension}'
+
     assert 'filename' in data
     path = os.path.join(outdir, data['filename'])
 
@@ -99,6 +105,22 @@ def write_resource(outdir, resource, memo={}):
     else:
         memo[data['filename']] = 1
 
+    # Now need to add the filename to the node.
+    # We do this after any deduplication checks, since otherwise
+    # we might get incorrect filenames.
+    if not has_filename:
+        nodes = [i for i in resource if i.tag == 'resource-attributes']
+        if nodes:
+            assert len(nodes) == 1
+            attrib = nodes[0]
+        else:
+            # No resource-attributes, create it.
+            attrib = etree.SubElement(resource, 'resource-attributes')
+
+        # Now append the filename to the attrib element.
+        filename = etree.SubElement(attrib, 'file-name')
+        filename.text = data['filename']
+
     # Write the data
     with open(path, 'wb') as file:
         file.write(data['contents'])
@@ -107,14 +129,9 @@ def write_resource(outdir, resource, memo={}):
 def process_note(outdir, note):
     '''Process and individual note, processing all attachments.'''
 
-    remove = []
     for child in note:
         if child.tag == 'resource':
             write_resource(outdir, child)
-            remove.append(child)
-
-    for resource in remove:
-        note.remove(resource)
 
 
 def main():
