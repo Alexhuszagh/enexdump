@@ -5,6 +5,7 @@
 //    Issues with inline attachments not being included.
 //    Issues with some redundant attachments.
 
+const crypto = require('crypto-js');
 const fs = require('fs');
 const minidom = require('minidom');
 const mkdirp = require('mkdirp')
@@ -69,10 +70,10 @@ dumper.dump({
       const filename = normalizeFilename(attachment.metadata.name);
       const attachmentPath = path.join(attachDir, filename);
       if (fs.existsSync(attachmentPath)) {
-        // Check if the contents match those on file, exactly. Throw an error if they differ.
-        // Useful to check error handling later.
+        const newHash = crypto.SHA256(attachment.content);
         const content = fs.readFileSync(attachmentPath);
-        if (!attachment.content.equals(content)) {
+        const oldHash = crypto.SHA256(content);
+        if (newHash.toString() != oldHash.toString()) {
           throw new Error(`Attachment at path "${attachmentPath}" already exists.`);
         }
       }

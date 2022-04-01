@@ -14,7 +14,9 @@
   "homepage": "https://github.com/Alexhuszagh/enexdump#readme",
   "dependencies": {
     "@notable/dumper": "^2.0.3",
+    "crypto-js": "^4.1.1",
     "mkdirp": "^1.0.4",
+    "save": "^2.4.0",
     "yargs": "^17.4.0"
   }
 }
